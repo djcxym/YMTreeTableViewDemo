@@ -67,30 +67,31 @@
             }
             endPosition++;
         }
-        [_data removeObjectsInRange:NSMakeRange(startPosition, endPosition -  startPosition)];
-        NSMutableArray *indexPaths = [NSMutableArray array];
-        for (NSUInteger i=startPosition; i<endPosition; i++) {
-            NSIndexPath *tempIndexPath = [NSIndexPath indexPathForRow:i inSection:0];
-            [indexPaths addObject:tempIndexPath];
+        if (endPosition == startPosition) {
+            [self alert];
+        } else {
+            [_data removeObjectsInRange:NSMakeRange(startPosition, endPosition -  startPosition)];
+            NSMutableArray *indexPaths = [NSMutableArray array];
+            for (NSUInteger i=startPosition; i<endPosition; i++) {
+                NSIndexPath *tempIndexPath = [NSIndexPath indexPathForRow:i inSection:0];
+                [indexPaths addObject:tempIndexPath];
+            }
+            [self.tableView deleteRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationNone];
         }
-        [self.tableView deleteRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationNone];
     } else {//未展开，则展开
         NSArray *dataInsert = [self queryDataWithParent:node.nodeName andDepth:node.nodeDepth + 1];
         if (dataInsert.count == 0) {
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示" message:@"到根结点了" preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"好的" style:UIAlertActionStyleDefault handler:nil];
-            [alert addAction:okAction];
-            [self presentViewController:alert animated:YES completion:nil];
-            return;
+            [self alert];
+        } else {
+            NSMutableArray *indexPaths = [NSMutableArray array];
+            for (NSInteger i = 0; i<dataInsert.count; i++) {
+                YMTreeNode *node = dataInsert[i];
+                [self.data insertObject:node atIndex:indexPath.row + i + 1];
+                [indexPaths addObject:[NSIndexPath indexPathForRow:indexPath.row + i + 1 inSection:0]];
+            }
+            [self.tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationAutomatic];
+            //        [self.tableView reloadData];
         }
-        NSMutableArray *indexPaths = [NSMutableArray array];
-        for (NSInteger i = 0; i<dataInsert.count; i++) {
-            YMTreeNode *node = dataInsert[i];
-            [self.data insertObject:node atIndex:indexPath.row + i + 1];
-            [indexPaths addObject:[NSIndexPath indexPathForRow:indexPath.row + i + 1 inSection:0]];
-        }
-        [self.tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationAutomatic];
-//        [self.tableView reloadData];
     }
     node.expanded = !node.expanded;
 }
@@ -108,4 +109,10 @@
     return result;
 }
 
+- (void)alert {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示" message:@"到根结点了" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"好的" style:UIAlertActionStyleDefault handler:nil];
+    [alert addAction:okAction];
+    [self presentViewController:alert animated:YES completion:nil];
+}
 @end
